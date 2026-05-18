@@ -1,0 +1,286 @@
+# UCZone Enums — the ones you actually use
+
+A consolidated reference for the enums that come up constantly in scripting.
+Access them as `Enum.<Name>.<KEY>` (e.g. `Enum.ModifierState.MODIFIER_STATE_STUNNED`).
+
+The giant enums — `Enum.ModifierFunction` (~hundreds of entries),
+`Enum.GameActivity`, `Enum.ButtonCode`, `Enum.DotaChatMessage` — are not
+reproduced here; consult the GitBook `enums.md` for those. Everything below
+was copied from that page and is patch-stable in structure.
+
+---
+
+## Enum.DamageTypes
+
+Damage school. Used with `Ability.GetDamageType` and damage math.
+
+| Key | Value |
+|---|---|
+| `DAMAGE_TYPE_NONE` | 0 |
+| `DAMAGE_TYPE_PHYSICAL` | 1 |
+| `DAMAGE_TYPE_MAGICAL` | 2 |
+| `DAMAGE_TYPE_PURE` | 4 |
+| `DAMAGE_TYPE_HP_REMOVAL` | 8 |
+| `DAMAGE_TYPE_ALL` | 7 |
+
+## Enum.AbilityTypes
+
+| Key | Value |
+|---|---|
+| `ABILITY_TYPE_BASIC` | 0 |
+| `ABILITY_TYPE_ULTIMATE` | 1 |
+| `ABILITY_TYPE_ATTRIBUTES` | 2 (talent) |
+| `ABILITY_TYPE_HIDDEN` | 3 |
+
+## Enum.AbilityCastResult
+
+Returned by `Ability.CanBeExecuted`. **`READY` is `-1`** — and `-1` is truthy
+in Lua, so always compare `== -1`, never `if CanBeExecuted(a) then`.
+
+| Key | Value | Meaning |
+|---|---|---|
+| `READY` | -1 | OK to cast |
+| `NO_MANA` | 14 | not enough mana |
+| `ABILITY_CD` | 15 | on cooldown |
+| `NOT_LEARNED` | 16 | level 0 |
+| `PASSIVE` | 17 | passive, not castable |
+| `HIDDEN` | 60 | hidden ability |
+| `ITEM_CD` | 61 | item on cooldown |
+
+## Enum.ImmunityTypes
+
+`Ability.GetImmunityType` — whether the spell pierces BKB (magic immunity).
+
+| Key | Value |
+|---|---|
+| `SPELL_IMMUNITY_NONE` | 0 |
+| `SPELL_IMMUNITY_ALLIES_YES` | 1 |
+| `SPELL_IMMUNITY_ALLIES_NO` | 2 |
+| `SPELL_IMMUNITY_ENEMIES_YES` | 3 |
+| `SPELL_IMMUNITY_ENEMIES_NO` | 4 |
+| `SPELL_IMMUNITY_ALLIES_YES_ENEMIES_NO` | 5 |
+
+## Enum.DispellableTypes
+
+`Ability.GetDispellableType` — whether the debuff it applies can be dispelled.
+
+| Key | Value |
+|---|---|
+| `SPELL_DISPELLABLE_NONE` | 0 |
+| `SPELL_DISPELLABLE_YES_STRONG` | 1 |
+| `SPELL_DISPELLABLE_YES` | 2 |
+| `SPELL_DISPELLABLE_NO` | 3 |
+
+## Enum.TeamType
+
+Used to filter `Heroes.InRadius` / `NPCs.InRadius` — **relative to the
+`teamNum` argument** you pass.
+
+| Key | Value |
+|---|---|
+| `TEAM_ENEMY` | 0 |
+| `TEAM_FRIEND` | 1 |
+| `TEAM_BOTH` | 2 |
+
+## Enum.TargetTeam
+
+`Ability.GetTargetTeam` — who an ability may target.
+
+| Key | Value |
+|---|---|
+| `DOTA_UNIT_TARGET_TEAM_NONE` | 0 |
+| `DOTA_UNIT_TARGET_TEAM_FRIENDLY` | 1 |
+| `DOTA_UNIT_TARGET_TEAM_ENEMY` | 2 |
+| `DOTA_UNIT_TARGET_TEAM_BOTH` | 3 |
+| `DOTA_UNIT_TARGET_TEAM_CUSTOM` | 4 |
+
+`Enum.TargetType` (HERO = 1, CREEP = 2, BUILDING = 4, ...) and
+`Enum.TargetFlags` are bitmasks — see the GitBook `enums.md` for the full
+value lists.
+
+## Enum.GameState
+
+`GameRules` game phase — used in `OnGameRulesStateChange`.
+
+| Key | Value |
+|---|---|
+| `DOTA_GAMERULES_STATE_INIT` | 0 |
+| `DOTA_GAMERULES_STATE_WAIT_FOR_PLAYERS_TO_LOAD` | 1 |
+| `DOTA_GAMERULES_STATE_HERO_SELECTION` | 2 |
+| `DOTA_GAMERULES_STATE_STRATEGY_TIME` | 3 |
+| `DOTA_GAMERULES_STATE_PRE_GAME` | 4 |
+| `DOTA_GAMERULES_STATE_GAME_IN_PROGRESS` | 5 |
+| `DOTA_GAMERULES_STATE_POST_GAME` | 6 |
+| `DOTA_GAMERULES_STATE_DISCONNECT` | 7 |
+
+---
+
+## Enum.AbilityBehavior
+
+A **bitmask** — an ability's behavior is several of these OR'd together.
+Test a bit with a bitwise AND (`behavior & Enum.AbilityBehavior.X ~= 0`).
+
+| Key | Value |
+|---|---|
+| `DOTA_ABILITY_BEHAVIOR_NONE` | 0 |
+| `DOTA_ABILITY_BEHAVIOR_HIDDEN` | 1 |
+| `DOTA_ABILITY_BEHAVIOR_PASSIVE` | 2 |
+| `DOTA_ABILITY_BEHAVIOR_NO_TARGET` | 4 |
+| `DOTA_ABILITY_BEHAVIOR_UNIT_TARGET` | 8 |
+| `DOTA_ABILITY_BEHAVIOR_POINT` | 16 |
+| `DOTA_ABILITY_BEHAVIOR_AOE` | 32 |
+| `DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE` | 64 |
+| `DOTA_ABILITY_BEHAVIOR_CHANNELLED` | 128 |
+| `DOTA_ABILITY_BEHAVIOR_ITEM` | 256 |
+| `DOTA_ABILITY_BEHAVIOR_TOGGLE` | 512 |
+| `DOTA_ABILITY_BEHAVIOR_DIRECTIONAL` | 1024 |
+| `DOTA_ABILITY_BEHAVIOR_IMMEDIATE` | 2048 |
+| `DOTA_ABILITY_BEHAVIOR_AUTOCAST` | 4096 |
+| `DOTA_ABILITY_BEHAVIOR_OPTIONAL_UNIT_TARGET` | 8192 |
+| `DOTA_ABILITY_BEHAVIOR_OPTIONAL_POINT` | 16384 |
+| `DOTA_ABILITY_BEHAVIOR_OPTIONAL_NO_TARGET` | 32768 |
+| `DOTA_ABILITY_BEHAVIOR_AURA` | 65536 |
+| `DOTA_ABILITY_BEHAVIOR_ATTACK` | 131072 |
+| `DOTA_ABILITY_BEHAVIOR_DONT_RESUME_MOVEMENT` | 262144 |
+| `DOTA_ABILITY_BEHAVIOR_ROOT_DISABLES` | 524288 |
+| `DOTA_ABILITY_BEHAVIOR_UNRESTRICTED` | 1048576 |
+| `DOTA_ABILITY_BEHAVIOR_IGNORE_PSEUDO_QUEUE` | 2097152 |
+| `DOTA_ABILITY_BEHAVIOR_IGNORE_CHANNEL` | 4194304 |
+| `DOTA_ABILITY_BEHAVIOR_DONT_CANCEL_MOVEMENT` | 8388608 |
+| `DOTA_ABILITY_BEHAVIOR_DONT_ALERT_TARGET` | 16777216 |
+| `DOTA_ABILITY_BEHAVIOR_DONT_RESUME_ATTACK` | 33554432 |
+| `DOTA_ABILITY_BEHAVIOR_NORMAL_WHEN_STOLEN` | 67108864 |
+| `DOTA_ABILITY_BEHAVIOR_IGNORE_BACKSWING` | 134217728 |
+| `DOTA_ABILITY_BEHAVIOR_RUNE_TARGET` | 268435456 |
+| `DOTA_ABILITY_BEHAVIOR_DONT_CANCEL_CHANNEL` | 536870912 |
+| `DOTA_ABILITY_BEHAVIOR_VECTOR_TARGETING` | 1073741824 |
+| `DOTA_ABILITY_BEHAVIOR_LAST_RESORT_POINT` | 2147483648 |
+| `DOTA_ABILITY_BEHAVIOR_CAN_SELF_CAST` | 4294967296 |
+| `DOTA_ABILITY_BEHAVIOR_SHOW_IN_GUIDES` | 8589934592 |
+| `DOTA_ABILITY_BEHAVIOR_UNLOCKED_BY_EFFECT_INDEX` | 17179869184 |
+| `DOTA_ABILITY_BEHAVIOR_SUPPRESS_ASSOCIATED_CONSUMABLE` | 34359738368 |
+| `DOTA_ABILITY_BEHAVIOR_FREE_DRAW_TARGETING` | 68719476736 |
+| `DOTA_ABILITY_BEHAVIOR_IGNORE_SILENCE` | 137438953472 |
+| `DOTA_ABILITY_BEHAVIOR_IGNORE_MUTED` | 549755813888 |
+| `DOTA_ABILITY_BEHAVIOR_ALT_CASTABLE` | 1099511627776 |
+| `DOTA_ABILITY_BEHAVIOR_SKIP_FOR_KEYBINDS` | 4398046511104 |
+
+---
+
+## Enum.ModifierState
+
+Used with `NPC.HasState(npc, state)` and `NPC.GetStatesDuration`. The value
+is a bit index, not a mask — pass the enum directly.
+
+| Key | Value |
+|---|---|
+| `MODIFIER_STATE_ROOTED` | 0 |
+| `MODIFIER_STATE_DISARMED` | 1 |
+| `MODIFIER_STATE_ATTACK_IMMUNE` | 2 |
+| `MODIFIER_STATE_SILENCED` | 3 |
+| `MODIFIER_STATE_MUTED` | 4 |
+| `MODIFIER_STATE_STUNNED` | 5 |
+| `MODIFIER_STATE_HEXED` | 6 |
+| `MODIFIER_STATE_INVISIBLE` | 7 |
+| `MODIFIER_STATE_INVULNERABLE` | 8 |
+| `MODIFIER_STATE_MAGIC_IMMUNE` | 9 |
+| `MODIFIER_STATE_PROVIDES_VISION` | 10 |
+| `MODIFIER_STATE_NIGHTMARED` | 11 |
+| `MODIFIER_STATE_BLOCK_DISABLED` | 12 |
+| `MODIFIER_STATE_EVADE_DISABLED` | 13 |
+| `MODIFIER_STATE_UNSELECTABLE` | 14 |
+| `MODIFIER_STATE_CANNOT_TARGET_ENEMIES` | 15 |
+| `MODIFIER_STATE_CANNOT_TARGET_BUILDINGS` | 16 |
+| `MODIFIER_STATE_CANNOT_MISS` | 17 |
+| `MODIFIER_STATE_SPECIALLY_DENIABLE` | 18 |
+| `MODIFIER_STATE_FROZEN` | 19 |
+| `MODIFIER_STATE_COMMAND_RESTRICTED` | 20 |
+| `MODIFIER_STATE_NOT_ON_MINIMAP` | 21 |
+| `MODIFIER_STATE_LOW_ATTACK_PRIORITY` | 22 |
+| `MODIFIER_STATE_NO_HEALTH_BAR` | 23 |
+| `MODIFIER_STATE_FLYING` | 26 |
+| `MODIFIER_STATE_NO_UNIT_COLLISION` | 27 |
+| `MODIFIER_STATE_PASSIVES_DISABLED` | 30 |
+| `MODIFIER_STATE_DOMINATED` | 31 |
+| `MODIFIER_STATE_BLIND` | 32 |
+| `MODIFIER_STATE_OUT_OF_GAME` | 33 |
+| `MODIFIER_STATE_TRUESIGHT_IMMUNE` | 36 |
+| `MODIFIER_STATE_UNTARGETABLE` | 37 |
+| `MODIFIER_STATE_UNSLOWABLE` | 44 |
+| `MODIFIER_STATE_TETHERED` | 45 |
+| `MODIFIER_STATE_FEARED` | 47 |
+| `MODIFIER_STATE_TAUNTED` | 48 |
+| `MODIFIER_STATE_CANNOT_BE_MOTION_CONTROLLED` | 49 |
+| `MODIFIER_STATE_DEBUFF_IMMUNE` | 56 |
+| `MODIFIER_STATE_ATTACKS_ARE_MELEE` | 59 |
+| `MODIFIER_STATE_LAST` | 64 |
+
+*(Values 24-25, 28-29, 34-35, 38-43, 46, 50-55, 57-58, 60-63 exist too —
+mostly rendering / pathing flags. Full list in the GitBook `enums.md`.)*
+
+---
+
+## Enum.UnitOrder
+
+The order type in `OnPrepareUnitOrders` (`order.order`) and what you issue.
+
+| Key | Value |
+|---|---|
+| `DOTA_UNIT_ORDER_NONE` | 0 |
+| `DOTA_UNIT_ORDER_MOVE_TO_POSITION` | 1 |
+| `DOTA_UNIT_ORDER_MOVE_TO_TARGET` | 2 |
+| `DOTA_UNIT_ORDER_ATTACK_MOVE` | 3 |
+| `DOTA_UNIT_ORDER_ATTACK_TARGET` | 4 |
+| `DOTA_UNIT_ORDER_CAST_POSITION` | 5 |
+| `DOTA_UNIT_ORDER_CAST_TARGET` | 6 |
+| `DOTA_UNIT_ORDER_CAST_TARGET_TREE` | 7 |
+| `DOTA_UNIT_ORDER_CAST_NO_TARGET` | 8 |
+| `DOTA_UNIT_ORDER_CAST_TOGGLE` | 9 |
+| `DOTA_UNIT_ORDER_HOLD_POSITION` | 10 |
+| `DOTA_UNIT_ORDER_TRAIN_ABILITY` | 11 |
+| `DOTA_UNIT_ORDER_DROP_ITEM` | 12 |
+| `DOTA_UNIT_ORDER_GIVE_ITEM` | 13 |
+| `DOTA_UNIT_ORDER_PICKUP_ITEM` | 14 |
+| `DOTA_UNIT_ORDER_PICKUP_RUNE` | 15 |
+| `DOTA_UNIT_ORDER_PURCHASE_ITEM` | 16 |
+| `DOTA_UNIT_ORDER_SELL_ITEM` | 17 |
+| `DOTA_UNIT_ORDER_DISASSEMBLE_ITEM` | 18 |
+| `DOTA_UNIT_ORDER_MOVE_ITEM` | 19 |
+| `DOTA_UNIT_ORDER_CAST_TOGGLE_AUTO` | 20 |
+| `DOTA_UNIT_ORDER_STOP` | 21 |
+| `DOTA_UNIT_ORDER_TAUNT` | 22 |
+| `DOTA_UNIT_ORDER_BUYBACK` | 23 |
+| `DOTA_UNIT_ORDER_GLYPH` | 24 |
+| `DOTA_UNIT_ORDER_CAST_RUNE` | 26 |
+| `DOTA_UNIT_ORDER_PING_ABILITY` | 27 |
+| `DOTA_UNIT_ORDER_MOVE_TO_DIRECTION` | 28 |
+| `DOTA_UNIT_ORDER_PATROL` | 29 |
+| `DOTA_UNIT_ORDER_VECTOR_TARGET_POSITION` | 30 |
+| `DOTA_UNIT_ORDER_CONTINUE` | 33 |
+| `DOTA_UNIT_ORDER_CONSUME_ITEM` | 41 |
+
+*(Values 25, 31-32, 34-40 are rarer order types — full list in the GitBook.)*
+
+## Enum.PlayerOrderIssuer
+
+| Key | Value |
+|---|---|
+| `DOTA_ORDER_ISSUER_SELECTED_UNITS` | 0 |
+| `DOTA_ORDER_ISSUER_CURRENT_UNIT_ONLY` | 1 |
+| `DOTA_ORDER_ISSUER_HERO_ONLY` | 2 |
+| `DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY` | 3 |
+
+---
+
+## Tip — flip an enum to look up names
+
+To turn a numeric value back into its key (handy when logging an order or a
+state), build a flipped table once:
+
+```lua
+local order_name = {}
+for key, value in pairs(Enum.UnitOrder) do
+    order_name[value] = key
+end
+-- order_name[4] == "DOTA_UNIT_ORDER_ATTACK_TARGET"
+```
