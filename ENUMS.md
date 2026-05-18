@@ -1,12 +1,12 @@
-# UCZone Enums — the ones you actually use
+# UCZone Enums
 
-A consolidated reference for the enums that come up constantly in scripting.
-Access them as `Enum.<Name>.<KEY>` (e.g. `Enum.ModifierState.MODIFIER_STATE_STUNNED`).
+A reference for the enums that come up constantly in scripting. Access them as
+`Enum.<Name>.<KEY>`, e.g. `Enum.ModifierState.MODIFIER_STATE_STUNNED`.
 
-The giant enums — `Enum.ModifierFunction` (~hundreds of entries),
-`Enum.GameActivity`, `Enum.ButtonCode`, `Enum.DotaChatMessage` — are not
-reproduced here; consult the GitBook `enums.md` for those. Everything below
-was copied from that page and is patch-stable in structure.
+The giant enums (`Enum.ModifierFunction` with hundreds of entries,
+`Enum.GameActivity`, `Enum.ButtonCode`, `Enum.DotaChatMessage`) aren't
+reproduced here; check the GitBook `enums.md` for those. Everything below was
+copied from that page and is patch-stable in structure.
 
 ---
 
@@ -34,8 +34,8 @@ Damage school. Used with `Ability.GetDamageType` and damage math.
 
 ## Enum.AbilityCastResult
 
-Returned by `Ability.CanBeExecuted`. **`READY` is `-1`** — and `-1` is truthy
-in Lua, so always compare `== -1`, never `if CanBeExecuted(a) then`.
+Returned by `Ability.CanBeExecuted`. `READY` is `-1`, and `-1` is truthy in
+Lua, so always compare `== -1`, never `if CanBeExecuted(a) then`.
 
 | Key | Value | Meaning |
 |---|---|---|
@@ -49,7 +49,7 @@ in Lua, so always compare `== -1`, never `if CanBeExecuted(a) then`.
 
 ## Enum.ImmunityTypes
 
-`Ability.GetImmunityType` — whether the spell pierces BKB (magic immunity).
+`Ability.GetImmunityType`. Whether the spell pierces BKB (magic immunity).
 
 | Key | Value |
 |---|---|
@@ -62,7 +62,7 @@ in Lua, so always compare `== -1`, never `if CanBeExecuted(a) then`.
 
 ## Enum.DispellableTypes
 
-`Ability.GetDispellableType` — whether the debuff it applies can be dispelled.
+`Ability.GetDispellableType`. Whether the debuff it applies can be dispelled.
 
 | Key | Value |
 |---|---|
@@ -73,8 +73,8 @@ in Lua, so always compare `== -1`, never `if CanBeExecuted(a) then`.
 
 ## Enum.TeamType
 
-Used to filter `Heroes.InRadius` / `NPCs.InRadius` — **relative to the
-`teamNum` argument** you pass.
+Used to filter `Heroes.InRadius` and `NPCs.InRadius`. It's relative to the
+`teamNum` argument you pass.
 
 | Key | Value |
 |---|---|
@@ -84,7 +84,7 @@ Used to filter `Heroes.InRadius` / `NPCs.InRadius` — **relative to the
 
 ## Enum.TargetTeam
 
-`Ability.GetTargetTeam` — who an ability may target.
+`Ability.GetTargetTeam`. Who an ability may target.
 
 | Key | Value |
 |---|---|
@@ -95,12 +95,12 @@ Used to filter `Heroes.InRadius` / `NPCs.InRadius` — **relative to the
 | `DOTA_UNIT_TARGET_TEAM_CUSTOM` | 4 |
 
 `Enum.TargetType` (HERO = 1, CREEP = 2, BUILDING = 4, ...) and
-`Enum.TargetFlags` are bitmasks — see the GitBook `enums.md` for the full
-value lists.
+`Enum.TargetFlags` are bitmasks; see the GitBook `enums.md` for the full value
+lists.
 
 ## Enum.GameState
 
-`GameRules` game phase — used in `OnGameRulesStateChange`.
+`GameRules` game phase. Used in `OnGameRulesStateChange`.
 
 | Key | Value |
 |---|---|
@@ -117,8 +117,8 @@ value lists.
 
 ## Enum.AbilityBehavior
 
-A **bitmask** — an ability's behavior is several of these OR'd together.
-Test a bit with a bitwise AND (`behavior & Enum.AbilityBehavior.X ~= 0`).
+A bitmask. An ability's behavior is several of these OR'd together. Test a bit
+with a bitwise AND: `behavior & Enum.AbilityBehavior.X ~= 0`.
 
 | Key | Value |
 |---|---|
@@ -169,8 +169,8 @@ Test a bit with a bitwise AND (`behavior & Enum.AbilityBehavior.X ~= 0`).
 
 ## Enum.ModifierState
 
-Used with `NPC.HasState(npc, state)` and `NPC.GetStatesDuration`. The value
-is a bit index, not a mask — pass the enum directly.
+Used with `NPC.HasState(npc, state)` and `NPC.GetStatesDuration`. The value is
+a bit index, not a mask, so pass the enum directly.
 
 | Key | Value |
 |---|---|
@@ -215,14 +215,14 @@ is a bit index, not a mask — pass the enum directly.
 | `MODIFIER_STATE_ATTACKS_ARE_MELEE` | 59 |
 | `MODIFIER_STATE_LAST` | 64 |
 
-*(Values 24-25, 28-29, 34-35, 38-43, 46, 50-55, 57-58, 60-63 exist too —
-mostly rendering / pathing flags. Full list in the GitBook `enums.md`.)*
+Values 24-25, 28-29, 34-35, 38-43, 46, 50-55, 57-58, 60-63 exist too, mostly
+rendering and pathing flags. Full list in the GitBook `enums.md`.
 
 ---
 
 ## Enum.UnitOrder
 
-The order type in `OnPrepareUnitOrders` (`order.order`) and what you issue.
+The order type in `OnPrepareUnitOrders` (`order.order`), and what you issue.
 
 | Key | Value |
 |---|---|
@@ -259,7 +259,7 @@ The order type in `OnPrepareUnitOrders` (`order.order`) and what you issue.
 | `DOTA_UNIT_ORDER_CONTINUE` | 33 |
 | `DOTA_UNIT_ORDER_CONSUME_ITEM` | 41 |
 
-*(Values 25, 31-32, 34-40 are rarer order types — full list in the GitBook.)*
+Values 25, 31-32, 34-40 are rarer order types; full list in the GitBook.
 
 ## Enum.PlayerOrderIssuer
 
@@ -272,7 +272,7 @@ The order type in `OnPrepareUnitOrders` (`order.order`) and what you issue.
 
 ---
 
-## Tip — flip an enum to look up names
+## Tip: flip an enum to look up names
 
 To turn a numeric value back into its key (handy when logging an order or a
 state), build a flipped table once:

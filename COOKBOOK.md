@@ -30,8 +30,8 @@ end
 
 ## Cast an ability safely
 
-The full guard: the ability exists, is **learned**, and is castable now.
-`IsReady` alone is not enough — it is `true` for unlearned abilities.
+The full guard: the ability exists, is learned, and is castable now.
+`IsReady` alone is not enough, since it's `true` for unlearned abilities.
 
 ```lua
 local ab = NPC.GetAbility(me, "sniper_assassinate")
@@ -45,13 +45,14 @@ then
 end
 ```
 
-Items are abilities — the same works on an `NPC.GetItem(me, "item_x")` handle.
+Items are abilities, so the same works on an `NPC.GetItem(me, "item_x")`
+handle.
 
 ---
 
 ## Read a modifier's remaining time
 
-There is no `GetRemainingTime`; compute it from the die time.
+There is no `GetRemainingTime`, so compute it from the die time.
 
 ```lua
 local mod = NPC.GetModifier(enemy, "modifier_sniper_shrapnel_slow")
@@ -65,7 +66,7 @@ end
 
 ## Check unit states (stunned, magic-immune, ...)
 
-`HasState` is the right tool — it covers stun / silence / hex / BKB / root.
+`HasState` is the right tool. It covers stun, silence, hex, BKB, root.
 
 ```lua
 local MS = Enum.ModifierState
@@ -85,8 +86,8 @@ local dur = NPC.GetStatesDuration(enemy,
 
 ## Predict a target's position
 
-`NPC.GetMoveSpeed` is a STAT, not a velocity — it never gives motion. Use the
-networked velocity vector instead, and `pcall`-guard it (undocumented).
+`NPC.GetMoveSpeed` is a STAT, not a velocity, so it never tells you motion.
+Use the networked velocity vector instead, and pcall-guard it (undocumented).
 
 ```lua
 local function velocity_of(unit)
@@ -100,15 +101,15 @@ local lead   = 0.5                                   -- seconds of total delay
 local future = Entity.GetAbsOrigin(target) + velocity_of(target) * lead
 ```
 
-`NPC.IsMoving(unit)` / `NPC.IsRunning(unit)` are the "is it actually moving"
+`NPC.IsMoving(unit)` and `NPC.IsRunning(unit)` are the "is it actually moving"
 booleans if you only need yes/no.
 
 ---
 
 ## Effective HP and a simple kill check
 
-There is no single effective-HP call — compose it. Barriers (shields) sit on
-top of HP; armor / resist scale the damage.
+There is no single effective-HP call, so compose it. Barriers (shields) sit
+on top of HP; armor and resist scale the damage.
 
 ```lua
 -- can `magical_damage` of magic damage kill `enemy` right now?
@@ -122,7 +123,7 @@ end
 ```
 
 For physical damage use `NPC.GetArmorDamageMultiplier`. `NPC.HasAegis(enemy)`
-is effectively a second life — fold it in before committing a kill combo.
+is effectively a second life, so fold it in before committing a kill combo.
 
 ---
 
@@ -131,7 +132,7 @@ is effectively a second life — fold it in before committing a kill combo.
 ```lua
 local function dist(a, b)
     local pa, pb = Entity.GetAbsOrigin(a), Entity.GetAbsOrigin(b)
-    return (pa - pb):Length2D()          -- 2D — ignore the z axis for range
+    return (pa - pb):Length2D()          -- 2D, ignores the z axis
 end
 
 -- range check without building Vectors yourself:
@@ -174,6 +175,6 @@ end
 print("value is", some_table)        -- console + debug.log, auto-stringifies
 ```
 
-`print` / `log` write to `%cheat_dir%/debug.log`. Play a demo, then read the
-log — that round-trip is the core debugging loop. Keep heavy work out of
+`print` and `log` write to `%cheat_dir%/debug.log`. Play a demo, then read the
+log. That round-trip is the core debugging loop. Keep heavy work out of
 `OnDraw` (FPS cost); log instead.
