@@ -3,13 +3,13 @@
 This is a pile of notes on the UCZone scripting API for Dota 2, cleaned up and
 organized so it's actually useful.
 
-The official GitBook docs are okay, but a lot of the API has sharp edges —
+The official GitBook docs are okay, but a lot of the API has sharp edges
 functions that don't do what their name says, things that don't exist at all,
 values that look final but secretly aren't. Every time one of those came up,
 it went into a note. This repo is all of that, written down properly.
 
-To be clear about what this is: it's **reference material and notation, not
-scripts**. There's nothing here you drop into the game and run. It's a map of
+To be clear about what this is: it's reference material and notation, not
+scripts. There's nothing here you drop into the game and run. It's a map of
 how the API behaves so you can write your own stuff with fewer surprises and
 fewer wasted test runs.
 
@@ -28,8 +28,8 @@ fewer wasted test runs.
 ### Reference — keep these open while you work
 
 - **[API_REFERENCE.md](API_REFERENCE.md)** — the big one. Every function worth
-  knowing for reading the game state — abilities, items, units, modifiers,
-  damage — and what each one *actually* returns. Includes a flat-out
+  knowing for reading the game state abilities, items, units, modifiers,
+  damage and what each one *actually* returns. Includes a flat-out
   "doesn't exist / broken" list so you don't burn time on dead functions.
 - **[API_GOTCHAS.md](API_GOTCHAS.md)** — the traps, in detail. Names that lie,
   return values that are backwards, stats that look final but need a bonus
@@ -47,15 +47,15 @@ fewer wasted test runs.
 ### Tools
 
 - **[tools/lint_uczone_script.py](tools/lint_uczone_script.py)** — a small
-  linter. Point it at your `.lua` script and it flags the known API traps —
+  linter. Point it at your `.lua` script and it flags the known API traps
   calling a function that doesn't exist, the backwards-return bug, base stats
-  used without their bonus, and so on — before you ever load the thing in
+  used without their bonus, and so on before you ever load the thing in
   game. Pure Python 3, nothing to install.
 
 ## A note on accuracy
 
 This is all hands-on stuff, checked against how the API and the game actually
-behave — verified around the 7.41C patch era. Both the API and the game move
+behave verified around the 7.41C patch era. Both the API and the game move
 with patches, so treat specific numbers (cooldowns, ranges, costs) as "true
 when written" and re-check against the current game data if something looks
 off. If you spot something wrong, fixing the note is the whole point.
