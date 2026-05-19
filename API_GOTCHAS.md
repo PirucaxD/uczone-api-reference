@@ -23,6 +23,16 @@ it does one thing and does another. Grouped by failure mode. See
 - `Ability.IsReady(ability)` returns `true` for an ability that isn't learned
   yet (level 0). Always gate on `Ability.GetLevel(ability) > 0`.
 
+- `Humanizer.GetOrderQueue()` is the Humanizer's own pending-order queue —
+  orders your script issued through the Humanizer — not a feed of the
+  player's manual orders. Scanning it for "what is the player attacking"
+  misses every manual right-click and every mid-fight target switch. To
+  observe the player's intent, watch the `OnPrepareUnitOrders` callback: it
+  fires for every order, the player's included (`data.npc` / `data.order` /
+  `data.target`). Your own orders carry the `identifier` string you passed
+  to `Player.PrepareUnitOrders`, so a prefix check on `data.identifier`
+  separates script orders from the player's. Verified 2026-05-18.
+
 ---
 
 ## 2. Inverted or surprising return values
