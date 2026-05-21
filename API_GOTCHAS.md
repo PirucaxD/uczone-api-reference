@@ -131,6 +131,54 @@ ignore it after re-mirroring the docs.
 
 ---
 
+## 7. Nilable returns that crash on access
+
+- `Entity.GetAbsOrigin(e)` is NILABLE. It returns `nil` for a dead,
+  mid-respawn, or just-destroyed entity — even one that passed
+  `Entity.IsEntity(e)` a line earlier (the handle is valid; the unit just
+  has no world position). Any `pos.x` / arithmetic / `:Distance2D(pos)`
+  immediately after `GetAbsOrigin` needs an `if pos then` guard. Common
+  crash shapes: a target dying mid-tick between an `IsAlive` check and the
+  pos read; the local hero mid-respawn; a particle / field-thinker entity
+  destroyed between `IsEntity` and `GetAbsOrigin`.
+
+## 8. KV data limits, and the APIs that route around them
+
+- `npc_abilities.json` exposes ability names, `AbilityBehavior`,
+  `AbilityType`, damage, cooldown, cast range and `AbilityValues` — but
+  NOT the names of the `modifier_*` modifiers an ability applies (only
+  `SpecialBonusIntrinsic` talent modifiers appear). A threat / debuff
+  catalog keyed on modifier names therefore cannot be data-derived;
+  `modifier_<ability>` is a convention guess that has to be harvested from
+  an in-game "unrecognized modifier" log. Anything keyed on ability names,
+  behaviors, or cast-activity slots IS fully KV-derivable — prefer
+  ability-keyed designs.
+
+- `NPC.GetChannellingAbility(npc)` returns the `CAbility` the unit is
+  currently channelling (nil otherwise) — a modifier-name-free channel
+  detector. Use it instead of a hand-maintained channel-modifier list,
+  which rots (see above). Fall back to a modifier check only where a
+  SPECIFIC modifier matters (e.g. `modifier_teleporting` to single out a
+  Teleport among channels).
+
+- Cast-activity slots are derivable, but not by raw index.
+  `ACT_DOTA_CAST_ABILITY_N` is the unit's spell-bar slot — Q=1, W=2, E=3,
+  R=4 — NOT the index in the hero's KV `Ability1..N` array (which is padded
+  with `generic_hidden`, innate, and hidden entries). Derive the slot: walk
+  the ability list, skip `generic_hidden` / `Innate=1` / `HIDDEN` or
+  `NOT_LEARNABLE` behavior / pure-passive / `ABILITY_TYPE_ATTRIBUTES`; the
+  `ABILITY_TYPE_ULTIMATE` ability is AB4, the first three remaining
+  castables are AB1/AB2/AB3.
+
+## 9. Behaviors that surprise in bot matches
+
+- `NPC.IsAttacking(ally)` is unreliable for ALLIED bots. A heuristic that
+  counts allies attacking a given enemy by polling `NPC.IsAttacking` on
+  each ally can read `false` for an ally that is visibly attacking, across
+  whole matches in some ally-mixes (it reports correctly in others). Treat
+  any allied-bot `IsAttacking` heuristic as best-effort; instrument it and
+  keep a fallback that does not depend on it.
+
 ## How this list grows
 
 Add an entry when a UCZone API call surprises you: a name that doesn't exist
