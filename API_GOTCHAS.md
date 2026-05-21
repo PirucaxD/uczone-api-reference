@@ -188,6 +188,21 @@ ignore it after re-mirroring the docs.
   any allied-bot `IsAttacking` heuristic as best-effort; instrument it and
   keep a fallback that does not depend on it.
 
+- The engine silently drops the FIRST cast of a freshly-acquired item. The
+  order is well-formed and reaches the engine intact (it appears in
+  `ExecuteOrder`), the item handle resolves from an active slot, the ability
+  reads ready, the target is valid and in range, mana is fine, the caster is
+  not disabled. The cast still does nothing: no cooldown, no effect. The
+  SECOND and every later cast of that same item work normally. One cast
+  "breaks the item in"; most likely the engine has not resolved the item's
+  slot or cast state until it is commanded once. Verified by tracing a
+  failed Hurricane Pike cast against a later successful one: the two were
+  byte-identical in the log (same order type, ability and target handles,
+  flags). A freshly-bought active item cannot be relied on for its first
+  use. Work around it by priming the item with one throwaway cast when it
+  is safe to, and by re-issuing a missed first cast one frame later so the
+  second, landing cast covers the action.
+
 ## How this list grows
 
 Add an entry when a UCZone API call surprises you: a name that doesn't exist
