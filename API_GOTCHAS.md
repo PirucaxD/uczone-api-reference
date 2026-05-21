@@ -48,6 +48,15 @@ it does one thing and does another. Grouped by failure mode. See
 - `Hero.GetLastVisibleTime(hero)` returns `nil` for a hero that has never been
   fogged. Treat `nil` as "freshly visible", not as a veto.
 
+- `NPC.FindRotationAngle(npc, pos)` returns the angle in RADIANS, not
+  degrees. The doc only says "the rotation angle" with no unit. `math.abs`
+  of the result caps at pi (~3.14), so a threshold written in degrees can
+  never be true: a facing gate like `if angle > 30` or `if angle > 120`
+  silently degrades to always-pass. Convert with `math.deg(angle)` before
+  comparing to a degree threshold, or express the threshold in radians.
+  Verified 2026-05-21 from a bot match: a gate that assumed 30 degrees
+  logged angle values of 0..3 and never once crossed the threshold.
+
 ---
 
 ## 3. Base-only stats that look final
