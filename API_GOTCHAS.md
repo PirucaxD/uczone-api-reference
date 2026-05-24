@@ -33,6 +33,18 @@ it does one thing and does another. Grouped by failure mode. See
   to `Player.PrepareUnitOrders`, so a prefix check on `data.identifier`
   separates script orders from the player's. Verified 2026-05-18.
 
+- `Ability.GetSpecialValueFor` does not exist. The real function is
+  `Ability.GetLevelSpecialValueFor(ability, name, [lvl])`. The trap: one
+  of the doc pages contains a literal "WRONG API FIX ME IT MUST BE
+  GetSpecialValueFor" note that reads like a bug report on the API name.
+  It is not. The LuaCATS library at `Ability.lua` defines the function
+  exactly as documented under the longer name; the note is the doc
+  author's editorial wish. Use the long name. Verified 2026-05-21.
+
+- `Player.GetName(player)` returns TWO strings: `(nickname, proname|nil)`.
+  Naive `local name = Player.GetName(p)` silently drops the proname.
+  Bind both: `local nick, pro = Player.GetName(p)`. Verified 2026-05-19.
+
 ---
 
 ## 2. Inverted or surprising return values
@@ -96,6 +108,15 @@ double-count. `GetMoveSpeed`, `GetTrueDamage`, `GetTrueMaximumDamage`,
 - Status resistance scales CC duration, not whether it lands. Factor
   `MODIFIER_PROPERTY_STATUS_RESISTANCE` into predicted-impact-tick math.
 
+- Same-tick CAST orders REPLACE each other unless `queue=true`. Issuing
+  E + R + Q in the same frame with `queue=false` (the default) — each new
+  non-queued order replaces the unit's current intent, so one or more
+  casts get dropped before completing. The engine's shift-queue mechanic
+  is exposed via the `queue` flag on `Player.PrepareUnitOrders`. Pattern
+  for a multi-step combo: first step `queue=false` (interrupts the
+  baseline orbwalk), subsequent same-tick steps `queue=true`. Verified
+  2026-05-22.
+
 ---
 
 ## 5. Broken or non-existent
@@ -121,6 +142,19 @@ Predicate name traps: UCZone's negative predicates are named `Not*`, not
 `Is*`. `Target.NotIllusion(e)` exists; `Target.IsIllusion(e)` does not, and
 calling it crashes at runtime with `attempt to call a nil value`. Same for
 `NotClone`, `NotMeepoClone`, `NotSummon`.
+
+- `NPC.GetAngleDiff(npc, ...)` returns garbage values for non-hero NPCs.
+  Heroes only. For creeps / summons / wards / illusions use a manual
+  facing calculation from `GetAnglesAsVector` or `FindRotationAngle`
+  instead.
+
+- `Ability.GetName(ab)` throws when `ab` is a real entity that is NOT an
+  ability. Common shape: resolving a native order-queue entry's
+  `abilityIndex` with `Entity.Get` — that index can point at an ITEM
+  (ward dispenser, neutral item, consumable), not an ability.
+  `Entity.IsEntity` is not enough of a guard. Wrap in `pcall`, or gate on
+  an is-ability check. Verified 2026-05-22 in a ranked match: the call
+  threw four times and aborted the diagnostic tick each time.
 
 ---
 
@@ -150,6 +184,28 @@ ignore it after re-mirroring the docs.
   crash shapes: a target dying mid-tick between an `IsAlive` check and the
   pos read; the local hero mid-respawn; a particle / field-thinker entity
   destroyed between `IsEntity` and `GetAbsOrigin`.
+
+- `OnProjectile` data: `data.target` is nilable. When the projectile has
+  no tracked entity target (line projectile, world-position cast),
+  `data.target` is `nil` and `data.target_loc: Vector` is the actual
+  impact point. Useful non-obvious fields beyond the basics:
+  `expireTime`, `maxImpactTime`, `launch_tick`, `moveSpeed`,
+  `original_move_speed` — enough for full lead / dodge math without
+  polling.
+
+- `OnLinearProjectileCreate` data: `data.velocity` is a `Vector`, not a
+  scalar speed. For direction use `velocity:Normalized()`, for speed use
+  `velocity:Length()`. The event has no `target` field (it is linear by
+  definition — use `origin + velocity * t` for prediction). Other useful
+  fields: `acceleration: Vector`, `maxSpeed: number`, `distance: number`.
+
+- `OnParticleCreate` data: both `data.entity` and `data.entityForModifiers`
+  are nilable (marked `[?]`). World particles and pre-cast warning
+  particles often have no owner. The `entity_id: integer` /
+  `entity_for_modifiers_id: integer` companions are non-nil and useful
+  for raw integer matching. `particleNameIndex: integer` is the hashed
+  particle name for fast comparison; build the lookup key with
+  `Utils.ResourceIdFromName`.
 
 ## 8. KV data limits, and the APIs that route around them
 
@@ -202,6 +258,59 @@ ignore it after re-mirroring the docs.
   use. Work around it by priming the item with one throwaway cast when it
   is safe to, and by re-issuing a missed first cast one frame later so the
   second, landing cast covers the action.
+
+## 10. Allocation and resource traps
+
+- `Entity.GetAbsOrigin(e)` allocates a fresh `Vector` object on every
+  call. In a hot loop (per-frame distance checks across N units) the
+  garbage adds up. `Entity.GetAbsOriginXYZ(e)` returns the same data as
+  three numbers `(x, y, z)` with zero allocation; use it inside tight
+  loops and reserve `GetAbsOrigin` for one-shot reads where the Vector
+  object is actually used.
+
+- `GridNav.CreateNpcMap()` allocates a map handle that MUST be released
+  with `GridNav.ReleaseNpcMap(map)` or it leaks. Pair them in the same
+  code block, even on the error path. Verified by reading the doc note
+  at `gridnav.md`.
+
+## 11. API design quirks worth knowing
+
+- `Ability.CastTarget` / `Ability.CastNoTarget` / `Ability.CastPosition`
+  are NOT a faster or more direct cast pipeline. They are convenience
+  wrappers over `Player.PrepareUnitOrders` and end up on the same
+  humanizer / native-order list. They take the identical optional
+  parameters, just renamed: `push` (the `Ability.Cast*` flag) is
+  `callback` (the `PrepareUnitOrders` flag) under a different name with
+  the same semantics. Switching a cast off `PrepareUnitOrders` onto
+  `Ability.Cast*` buys nothing against a native-order flood;
+  `execute_fast=true` (front of the order list) is the only real lever.
+  Verified 2026-05-23.
+
+- `Ability.IsCastable(ability, mana)` takes a `mana` parameter — you
+  pass the mana budget you have and the function returns whether the
+  ability is castable AT that mana. Not `IsCastable(ability)` as the name
+  might suggest. Useful for "can I afford a combo at the current mana"
+  branches without manually subtracting per ability.
+
+- `Ability.GetLevelSpecialValueFor` returns `0` when called on a TALENT
+  handle. Talent magnitudes live in the parent ability's `AbilityValues`
+  (or on a sibling KV field), not on the talent's own `AbilityValues`.
+  Read the talent value from the parent ability, or hardcode with a
+  comment if the parent reference is awkward.
+
+- `Humanizer.GetOrderQueue()` exposes `triggerCallBack` per entry. Your
+  own orders, issued via `Player.PrepareUnitOrders(..., callback=true)`,
+  carry `triggerCallBack=true` on their queue entry; baseline and
+  framework subsystems issue with `callback=false`. A diff snapshot of
+  the queue across frames cleanly attributes each new order to "script"
+  vs "native or other". Pairs with your own `issued` log to prove the
+  order pipeline reaches the queue.
+
+- `CMenuBind:Get(idx)` returns `0` unreliably for keys that are actually
+  bound. `:Buttons()` returns the real key codes. A bind widget with `L`
+  bound was observed reporting `:Get(1)=0, :Get(2)=0, :Buttons()=22/0`
+  (22 is `L`). `:IsDown()` works regardless and is what you want for
+  dispatch decisions; only a readout-for-display path needs `:Buttons()`.
 
 ## How this list grows
 
