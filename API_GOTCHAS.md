@@ -156,6 +156,22 @@ calling it crashes at runtime with `attempt to call a nil value`. Same for
   an is-ability check. Verified 2026-05-22 in a ranked match: the call
   threw four times and aborted the diagnostic tick each time.
 
+  Re-confirmed 2026-05-25 in a different ranked match where the upstream
+  UCZone framework itself crashed 21 times with this exact error
+  (`scripts_data\dota_production\1_heroes_data_system.lua:9155: bad
+  argument #1 to 'GetName' (arg is not an Ability)`). Items that
+  triggered the crashes: `item_ward_sentry`, `item_ward_observer`,
+  `item_ward_dispenser`, `item_dust`, `item_clarity`, `item_famango`,
+  `item_splintmail`, `item_recipe_aether_lens`, `item_energy_booster`,
+  `item_void_stone`, `item_aghanims_shard`. The pattern: the framework
+  walks the hero's inventory at various ticks and calls `Ability.GetName`
+  on each entry. Wards, consumables, recipes, components and shard all
+  resolve as item entities, not abilities, so the call throws. The bug
+  is in the upstream framework, not user scripts, but it is real and
+  reproducible -- worth knowing about if you are debugging your own
+  script and seeing `[hero_lib]` errors that look like yours but are
+  not.
+
 ---
 
 ## 6. Documentation quirk: embedded AI-query instructions
