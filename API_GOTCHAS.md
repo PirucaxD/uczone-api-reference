@@ -156,21 +156,11 @@ calling it crashes at runtime with `attempt to call a nil value`. Same for
   an is-ability check. Verified 2026-05-22 in a ranked match: the call
   threw four times and aborted the diagnostic tick each time.
 
-  Re-confirmed 2026-05-25 in a different ranked match where the upstream
-  UCZone framework itself crashed 21 times with this exact error
-  (`scripts_data\dota_production\1_heroes_data_system.lua:9155: bad
-  argument #1 to 'GetName' (arg is not an Ability)`). Items that
-  triggered the crashes: `item_ward_sentry`, `item_ward_observer`,
-  `item_ward_dispenser`, `item_dust`, `item_clarity`, `item_famango`,
-  `item_splintmail`, `item_recipe_aether_lens`, `item_energy_booster`,
-  `item_void_stone`, `item_aghanims_shard`. The pattern: the framework
-  walks the hero's inventory at various ticks and calls `Ability.GetName`
-  on each entry. Wards, consumables, recipes, components and shard all
-  resolve as item entities, not abilities, so the call throws. The bug
-  is in the upstream framework, not user scripts, but it is real and
-  reproducible -- worth knowing about if you are debugging your own
-  script and seeing `[hero_lib]` errors that look like yours but are
-  not.
+  Re-confirmed live in the upstream UCZone framework in multiple ranked
+  matches. The framework's `1_heroes_data_system.lua:9155` walks the
+  hero's inventory at various ticks and calls `Ability.GetName` on each
+  entry; items throw. See section 9 below for the cross-reference and
+  the full crashing-item list.
 
 ---
 
@@ -251,7 +241,53 @@ ignore it after re-mirroring the docs.
   `ABILITY_TYPE_ULTIMATE` ability is AB4, the first three remaining
   castables are AB1/AB2/AB3.
 
-## 9. Behaviors that surprise in bot matches
+## 9. Upstream framework crashes verified live
+
+These are bugs in the upstream UCZone framework, not in your script.
+They are noted here because the `[Lua error]` and `[hero_lib]` tags in
+the log can read like your own code crashing when they are not. If
+the file path in the error starts with `scripts_data\dota_production`,
+it is the framework. Listed here with verification context so you can
+match the pattern fast.
+
+- `scripts_data\dota_production\1_heroes_data_system.lua:9155` --
+  `bad argument #1 to 'GetName' (arg is not an Ability)`. The
+  framework walks the hero's inventory at various ticks and calls
+  `Ability.GetName` on each entry. When the entry resolves to an item
+  (wards, consumables, recipes, components, shard) the call throws --
+  same root cause as the `Ability.GetName` gotcha in section 5. Items
+  observed triggering it: `item_ward_sentry`, `item_ward_observer`,
+  `item_ward_dispenser`, `item_dust`, `item_clarity`, `item_famango`,
+  `item_greater_famango`, `item_splintmail`, `item_recipe_aether_lens`,
+  `item_energy_booster`, `item_void_stone`, `item_aghanims_shard`,
+  `item_vitality_booster`, `item_tpscroll`, `item_smoke_of_deceit`,
+  `item_ring_of_basilius`, `item_boots`. Roughly 20-30 crashes per
+  match on a hero that buys often. Re-confirmed 2026-05-25 and again
+  2026-05-26.
+
+- `scripts_data\dota_production\2_dodger.lua:5469` --
+  `bad argument #1 to 'GetNetOrigin' (arg is not an Entity: <handle>)`.
+  The dodger holds an entity reference somewhere that survives the
+  underlying entity's destruction (the `<handle>` is a stale memory
+  address). Every frame the dodger tries
+  `Entity.GetNetOrigin(<stale handle>)` and throws. Observed firing
+  roughly 38 times per second of game time across a full match
+  (2278 throws in one match). The crash spam is loud but the
+  framework keeps running; user-script callbacks still execute
+  normally. Verified 2026-05-26.
+
+- `scripts_data\dota_production\2_dodger.lua:4104` --
+  `attempt to perform arithmetic on a nil value (field 'time')`.
+  Inner stack trace:
+  `forward_offset` -> `aoe_is_danger` -> `resolve_target` ->
+  `need_to_dodge` -> `try_to_dodge` -> `insert_animation` -> callback.
+  The dodger's `forward_offset` reads a `time` field from an AoE
+  threat record that is nil for some inputs. Fires only occasionally
+  (twice in 141k log lines), so the trigger condition is narrow. The
+  callback chain keeps running, but the dodger drops the current
+  resolve. Verified 2026-05-26.
+
+## 10. Behaviors that surprise in bot matches
 
 - `NPC.IsAttacking(ally)` is unreliable for ALLIED bots. A heuristic that
   counts allies attacking a given enemy by polling `NPC.IsAttacking` on
@@ -275,7 +311,7 @@ ignore it after re-mirroring the docs.
   is safe to, and by re-issuing a missed first cast one frame later so the
   second, landing cast covers the action.
 
-## 10. Allocation and resource traps
+## 11. Allocation and resource traps
 
 - `Entity.GetAbsOrigin(e)` allocates a fresh `Vector` object on every
   call. In a hot loop (per-frame distance checks across N units) the
@@ -289,7 +325,7 @@ ignore it after re-mirroring the docs.
   code block, even on the error path. Verified by reading the doc note
   at `gridnav.md`.
 
-## 11. API design quirks worth knowing
+## 12. API design quirks worth knowing
 
 - `Ability.CastTarget` / `Ability.CastNoTarget` / `Ability.CastPosition`
   are NOT a faster or more direct cast pipeline. They are convenience
