@@ -364,6 +364,30 @@ match the pattern fast.
   (22 is `L`). `:IsDown()` works regardless and is what you want for
   dispatch decisions; only a readout-for-display path needs `:Buttons()`.
 
+- The framework loads EVERY `.lua` file in `%cheat_dir%/scripts/` for
+  every match, regardless of which hero the player picks. There is no
+  per-hero auto-load (no folder convention like
+  `scripts/heroes/<x>/`, no `script.hero` metadata, no `OnHeroPick`
+  callback). A hero-specific script MUST self-gate. The canonical
+  pattern across observed hero scripts (Windranger, Keeper of the
+  Light, MeepoV2, custom Sniper brain) is:
+  ```lua
+  local me = Heroes.GetLocal()  -- or Player.GetAssignedHero(Players.GetLocal())
+  if not me or NPC.GetUnitName(me) ~= "npc_dota_hero_<x>" then return end
+  ```
+  inside each callback body (or once as an outermost wrap of the
+  returned callbacks table if the script chains additional handlers
+  via lib `.Wire` patterns — the wrap also gates the chained
+  observers cleanly). Without this gate, a script's callbacks AND any
+  `.Wire`-chained lib handlers fire on every hero the player picks,
+  with no warning. The framework's `starter_script.lua` example does
+  not gate either and silently relies on the user adding one.
+  Verified 2026-05-26 against a Sniper-specific brain that fired
+  Sniper's `item_hurricane_pike` on a Drow match's enemy PA before the
+  gate was added; the brain self-acquired as
+  `npc_dota_hero_drow_ranger` and ran full save/combo logic on Drow's
+  inventory.
+
 ## How this list grows
 
 Add an entry when a UCZone API call surprises you: a name that doesn't exist
